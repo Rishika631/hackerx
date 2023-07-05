@@ -10,7 +10,7 @@ def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
-    
+
     # Process and extract relevant information from the webpage
     # Return the response to be shown to the user
 
@@ -47,14 +47,18 @@ class WebmdSpider(Spider):
         st.write(result)
 
 
+def scrape_webmd(query):
+    process = CrawlerProcess(get_project_settings())
+    process.crawl(WebmdSpider, query=query)
+    process.start()
+
+
 def get_answer(query, sources):
     if "Mayo Clinic" in sources:
         scrape_mayo_clinic(query)
 
     if "WebMD" in sources:
-        process = CrawlerProcess(get_project_settings())
-        process.crawl(WebmdSpider, query=query)
-        process.start()
+        scrape_webmd(query)
 
 
 def main():
