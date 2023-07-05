@@ -18,7 +18,7 @@ def scrape_webmd(query):
     process = CrawlerProcess(get_project_settings())
 
     # Start the spider and pass the query as an argument
-    process.crawl(WebmdSpider, query=query)
+    process.crawl(spiders/webmd_spider.py, query=query)
     process.start()
 
 
