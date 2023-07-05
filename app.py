@@ -4,7 +4,21 @@ from bs4 import BeautifulSoup
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from scrapy import Spider, Request
+from webmd.items import WebmdItem
+from scrapy import Spider, Request
+from scrapy.selector import Selector
+import urllib
+import re
+import html
 
+headers = {'User-Agent': 'Chrome/60.0.3112.113', 
+           'enc_data': 'OXYIMo2UzzqFUzYszFv4lWP6aDP0r+h4AOC2fYVQIl8=', 
+           'timestamp': 'Mon, 04 Sept 2017 04:35:00 GMT', 
+           'client_id': '3454df96-c7a5-47bb-a74e-890fb3c30a0d'}
+
+import streamlit as st
+import requests
+from bs4 import BeautifulSoup
 
 def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
@@ -40,69 +54,16 @@ def scrape_mayo_clinic(query):
     else:
         st.write("No results found")
 
-
-
-class WebmdSpider(Spider):
-    name = "webmd"
-    allowed_domains = ['webmd.com']
-    start_urls = []
-
-    def __init__(self, query, **kwargs):
-        super().__init__(**kwargs)
-        self.start_urls = [f'https://www.webmd.com/drugs/2/search?type=name&query={query}']
-
-    def parse(self, response):
-        drug_list = response.xpath('//ul[@class="search-list"]/li/a[@class="search-link"]')
-        for drug in drug_list:
-            yield Request(response.urljoin(drug.xpath("@href").extract_first()), callback=self.parse_details)
-
-    def parse_details(self, response):
-        name = response.xpath('//h1/text()').extract_first()
-        uses = ' '.join(response.xpath('//h2[contains(text(), "Uses")]/following-sibling::div//text()').extract())
-        how_to_use = ' '.join(response.xpath('//h2[contains(text(), "How to Use")]/following-sibling::div//text()').extract())
-        side_effects = ' '.join(response.xpath('//h2[contains(text(), "Side Effects")]/following-sibling::div//text()').extract())
-        precautions = ' '.join(response.xpath('//h2[contains(text(), "Precautions")]/following-sibling::div//text()').extract())
-        interactions = ' '.join(response.xpath('//h2[contains(text(), "Interactions")]/following-sibling::div//text()').extract())
-
-        result = f"Name: {name}\n\n" \
-                 f"Uses: {uses}\n\n" \
-                 f"How to Use: {how_to_use}\n\n" \
-                 f"Side Effects: {side_effects}\n\n" \
-                 f"Precautions: {precautions}\n\n" \
-                 f"Interactions: {interactions}\n\n"
-
-        st.write(result)
-
-
-def scrape_webmd(query):
-    process = CrawlerProcess(get_project_settings())
-    process.crawl(WebmdSpider, query=query)
-    process.start()
-
-
-def get_answer(query, sources):
-    result = ""
-    
-    if "Mayo Clinic" in sources:
-        result += scrape_mayo_clinic(query)
-    
-    if "WebMD" in sources:
-        process = CrawlerProcess(get_project_settings())
-        process.crawl(WebmdSpider, query=query)
-        process.start()
-
-    return result
-
-
+# Streamlit app
 def main():
-    st.title("Medical Chatbot")
-    query = st.text_input("Ask a medical question")
-
-    if st.button("Search"):
-        selected_sources = st.multiselect("Select sources", ["Mayo Clinic", "WebMD"])
-        result = get_answer(query, selected_sources)
-        st.write(result)
-
+    st.title("Web Scraping with Streamlit")
+    query = st.text_input("Enter a drug name:")
+    if st.button("Scrape"):
+        scrape_mayo_clinic(query)
 
 if __name__ == "__main__":
     main()
+
+
+
+
