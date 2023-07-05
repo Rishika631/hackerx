@@ -1,9 +1,9 @@
 import requests
 import streamlit as st
 
-# Function to fetch drug information from OpenFDA API
-def fetch_drug_information(drug_name):
-    url = f'https://api.fda.gov/drug/label.json?search=brand_name:{drug_name}'
+# Function to fetch health information from FAERS API
+def fetch_health_information(question):
+    url = f"https://api.fda.gov/drug/event.json?limit=1&search={question}"
     response = requests.get(url)
     data = response.json()
     return data
@@ -11,25 +11,27 @@ def fetch_drug_information(drug_name):
 # Streamlit app
 def main():
     st.title("Health Bot")
-    st.write("Enter a drug name to fetch information:")
+    st.write("Enter a question to fetch health-related information:")
 
-    # User input for drug name
-    drug_name = st.text_input("Drug Name")
+    # User input for question
+    question = st.text_input("Question")
 
     if st.button("Fetch Information"):
-        # Fetch drug information
-        data = fetch_drug_information(drug_name)
+        # Fetch health information
+        data = fetch_health_information(question)
 
         # Display results
         if 'results' in data and len(data['results']) > 0:
-            drug_info = data['results'][0]
-            st.write("### Drug Information")
-            st.write(f"Brand Name: {drug_info.get('openfda', {}).get('brand_name', ['N/A'])[0]}")
-            st.write(f"Generic Name: {drug_info.get('openfda', {}).get('generic_name', ['N/A'])[0]}")
-            st.write(f"Manufacturer: {drug_info.get('openfda', {}).get('manufacturer_name', ['N/A'])[0]}")
-            st.write(f"Indications and Usage: {drug_info.get('indications_and_usage', 'N/A')}")
+            event_info = data['results'][0]
+            st.write("### Health Information")
+            st.write(f"Question: {question}")
+            st.write(f"Event Date: {event_info.get('receivedate', 'N/A')}")
+            st.write(f"Event Type: {event_info.get('primarysource', {}).get('report_type', 'N/A')}")
+            st.write(f"Patient Age: {event_info.get('patient', {}).get('patientage', 'N/A')}")
+            st.write(f"Patient Sex: {event_info.get('patient', {}).get('patientsex', 'N/A')}")
+            st.write(f"Description: {event_info.get('patient', {}).get('reaction', ['N/A'])[0].get('reactionmeddrapt', 'N/A')}")
         else:
-            st.write("No information found for the given drug.")
+            st.write("No information found for the given question.")
 
 if __name__ == '__main__':
     main()
