@@ -1,24 +1,6 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-from scrapy import Spider, Request
-from webmd.items import WebmdItem
-from scrapy import Spider, Request
-from scrapy.selector import Selector
-import urllib
-import re
-import html
-
-headers = {'User-Agent': 'Chrome/60.0.3112.113', 
-           'enc_data': 'OXYIMo2UzzqFUzYszFv4lWP6aDP0r+h4AOC2fYVQIl8=', 
-           'timestamp': 'Mon, 04 Sept 2017 04:35:00 GMT', 
-           'client_id': '3454df96-c7a5-47bb-a74e-890fb3c30a0d'}
-
-import streamlit as st
-import requests
-from bs4 import BeautifulSoup
 
 def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
@@ -63,7 +45,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
