@@ -1,7 +1,8 @@
 import requests
 import streamlit as st
 
-API_ENDPOINT = 'https://mcc.api.mayo.edu/semantic/v2/ask'
+MAYO_API_ENDPOINT = 'https://mcc.api.mayo.edu/semantic/v2/ask'
+WEBMD_API_ENDPOINT = 'https://api.webmd.com/v1/health'
 
 def fetch_mayo_clinic_information(query):
     headers = {
@@ -13,7 +14,16 @@ def fetch_mayo_clinic_information(query):
         'target': 'web'
     }
 
-    response = requests.post(API_ENDPOINT, headers=headers, json=data)
+    response = requests.post(MAYO_API_ENDPOINT, headers=headers, json=data)
+    data = response.json()
+    return data
+
+def fetch_webmd_information(query):
+    params = {
+        'title': query
+    }
+
+    response = requests.get(WEBMD_API_ENDPOINT, params=params)
     data = response.json()
     return data
 
@@ -24,15 +34,24 @@ def main():
     question = st.text_input("Question")
 
     if st.button("Fetch Information"):
-        data = fetch_mayo_clinic_information(question)
+        mayo_data = fetch_mayo_clinic_information(question)
+        webmd_data = fetch_webmd_information(question)
 
-        if 'answers' in data and len(data['answers']) > 0:
-            answer = data['answers'][0]
-            st.write("### Health Information")
+        st.write("### Mayo Clinic Information")
+        if 'answers' in mayo_data and len(mayo_data['answers']) > 0:
+            answer = mayo_data['answers'][0]
             st.write(f"Question: {question}")
             st.write(f"Answer: {answer['content']}")
         else:
-            st.write("No information found for the given question.")
+            st.write("No information found from Mayo Clinic API.")
+
+        st.write("### WebMD Information")
+        if 'data' in webmd_data and 'article' in webmd_data['data']:
+            article = webmd_data['data']['article']
+            st.write(f"Title: {article['title']}")
+            st.write(f"Summary: {article['summary']}")
+        else:
+            st.write("No information found from WebMD API.")
 
 if __name__ == '__main__':
     main()
