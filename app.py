@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from webmd_scraper import WebmdSpider
+import WebmdSpider
 
 def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
