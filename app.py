@@ -1,47 +1,35 @@
-import streamlit as st
 import requests
-from bs4 import BeautifulSoup
+import streamlit as st
 
-def scrape_mayo_clinic(query):
-    url = f"https://www.mayoclinic.org/search/search-results?q={query}"
+# Function to fetch drug information from OpenFDA API
+def fetch_drug_information(drug_name):
+    url = f'https://api.fda.gov/drug/label.json?search=brand_name:{drug_name}'
     response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    # Process and extract relevant information from the webpage
-    search_results = soup.find_all("li", class_="search")
-
-    if search_results:
-        # Extract the first search result
-        first_result = search_results[0]
-
-        # Get the link to the detailed page
-        link = first_result.find("a")["href"]
-
-        # Retrieve the detailed page content
-        detailed_response = requests.get(link)
-        detailed_soup = BeautifulSoup(detailed_response.content, "html.parser")
-
-        # Extract relevant information from the detailed page
-        drug_name = detailed_soup.find("h1", class_="drug-name-title").text.strip()
-        uses = detailed_soup.find("section", class_="drug-section drug-section-uses").text.strip()
-        side_effects = detailed_soup.find("section", class_="drug-section drug-section-side-effects").text.strip()
-
-        # Prepare the result
-        result = f"Name: {drug_name}\n\n" \
-                 f"Uses: {uses}\n\n" \
-                 f"Side Effects: {side_effects}\n\n"
-
-        # Write the result to Streamlit
-        st.write(result)
-    else:
-        st.write("No results found")
+    data = response.json()
+    return data
 
 # Streamlit app
 def main():
-    st.title("Web Scraping with Streamlit")
-    query = st.text_input("Enter a drug name:")
-    if st.button("Scrape"):
-        scrape_mayo_clinic(query)
+    st.title("Health Bot")
+    st.write("Enter a drug name to fetch information:")
 
-if __name__ == "__main__":
+    # User input for drug name
+    drug_name = st.text_input("Drug Name")
+
+    if st.button("Fetch Information"):
+        # Fetch drug information
+        data = fetch_drug_information(drug_name)
+
+        # Display results
+        if 'results' in data and len(data['results']) > 0:
+            drug_info = data['results'][0]
+            st.write("### Drug Information")
+            st.write(f"Brand Name: {drug_info.get('openfda', {}).get('brand_name', ['N/A'])[0]}")
+            st.write(f"Generic Name: {drug_info.get('openfda', {}).get('generic_name', ['N/A'])[0]}")
+            st.write(f"Manufacturer: {drug_info.get('openfda', {}).get('manufacturer_name', ['N/A'])[0]}")
+            st.write(f"Indications and Usage: {drug_info.get('indications_and_usage', 'N/A')}")
+        else:
+            st.write("No information found for the given drug.")
+
+if __name__ == '__main__':
     main()
