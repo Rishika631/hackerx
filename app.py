@@ -10,9 +10,34 @@ def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
-
+    
     # Process and extract relevant information from the webpage
-    # Return the response to be shown to the user
+    search_results = soup.find_all("li", class_="search")
+    
+    if search_results:
+        # Extract the first search result
+        first_result = search_results[0]
+        
+        # Get the link to the detailed page
+        link = first_result.find("a")["href"]
+        
+        # Retrieve the detailed page content
+        detailed_response = requests.get(link)
+        detailed_soup = BeautifulSoup(detailed_response.content, "html.parser")
+        
+        # Extract relevant information from the detailed page
+        drug_name = detailed_soup.find("h1", class_="drug-name-title").text.strip()
+        uses = detailed_soup.find("section", class_="drug-section drug-section-uses").text.strip()
+        side_effects = detailed_soup.find("section", class_="drug-section drug-section-side-effects").text.strip()
+        
+        # Return the extracted information
+        result = f"Name: {drug_name}\n\n" \
+                 f"Uses: {uses}\n\n" \
+                 f"Side Effects: {side_effects}\n\n"
+        return result
+    else:
+        return "No results found"
+
 
 
 class WebmdSpider(Spider):
@@ -54,11 +79,17 @@ def scrape_webmd(query):
 
 
 def get_answer(query, sources):
+    result = ""
+    
     if "Mayo Clinic" in sources:
-        scrape_mayo_clinic(query)
-
+        result += scrape_mayo_clinic(query)
+    
     if "WebMD" in sources:
-        scrape_webmd(query)
+        process = CrawlerProcess(get_project_settings())
+        process.crawl(WebmdSpider, query=query)
+        process.start()
+
+    return result
 
 
 def main():
@@ -67,7 +98,8 @@ def main():
 
     if st.button("Search"):
         selected_sources = st.multiselect("Select sources", ["Mayo Clinic", "WebMD"])
-        get_answer(query, selected_sources)
+        result = get_answer(query, selected_sources)
+        st.write(result)
 
 
 if __name__ == "__main__":
