@@ -31,11 +31,11 @@ class WebmdSpider(Spider):
 
     def parse_details(self, response):
         name = response.xpath('//h1/text()').extract_first()
-        uses = ' '.join(response.xpath('//h3[contains(text(), "Uses")]/following-sibling::p//text()').extract())
-        how_to_use = ' '.join(response.xpath('//h3[contains(text(), "How to Use")]/following-sibling::p//text()').extract())
-        side_effects = ' '.join(response.xpath('//h3[contains(text(), "Side Effects")]/following-sibling::div/p//text()').extract())
-        precautions = ' '.join(response.xpath('//h3[contains(text(), "Precautions")]/following-sibling::div/p//text()').extract())
-        interactions = ' '.join(response.xpath('//h3[contains(text(), "Interactions")]/following-sibling::div/p//text()').extract())
+        uses = ' '.join(response.xpath('//h2[contains(text(), "Uses")]/following-sibling::div//text()').extract())
+        how_to_use = ' '.join(response.xpath('//h2[contains(text(), "How to Use")]/following-sibling::div//text()').extract())
+        side_effects = ' '.join(response.xpath('//h2[contains(text(), "Side Effects")]/following-sibling::div//text()').extract())
+        precautions = ' '.join(response.xpath('//h2[contains(text(), "Precautions")]/following-sibling::div//text()').extract())
+        interactions = ' '.join(response.xpath('//h2[contains(text(), "Interactions")]/following-sibling::div//text()').extract())
 
         result = f"Name: {name}\n\n" \
                  f"Uses: {uses}\n\n" \
