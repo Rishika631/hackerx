@@ -18,24 +18,34 @@ def scrape_webmd(query):
     # Process and extract relevant information from the webpage
     # Return the response to be shown to the user
 
+def get_answer(query, sources):
+    answers = []
+    
+    if "Mayo Clinic" in sources:
+        answers.extend(scrape_mayo_clinic(query))
+    
+    if "WebMD" in sources:
+        answers.extend(scrape_webmd(query))
+    
+    # Implement logic to select the best answer based on relevance or any other criteria
+    
+    return answers
+
 def main():
     st.title("Medical Chatbot")
     query = st.text_input("Ask a medical question")
 
     if st.button("Search"):
-        # Perform web scraping based on the selected sources
+        # Perform question answering based on the selected sources
         selected_sources = st.multiselect("Select sources", ["Mayo Clinic", "WebMD"])
-        results = []
+        answers = get_answer(query, selected_sources)
 
-        if "Mayo Clinic" in selected_sources:
-            results.extend(scrape_mayo_clinic(query))
-
-        if "WebMD" in selected_sources:
-            results.extend(scrape_webmd(query))
-
-        # Display the results
-        for result in results:
-            st.write(result)
+        # Display the answers
+        if answers:
+            for answer in answers:
+                st.write(answer)
+        else:
+            st.write("No relevant answers found.")
 
 if __name__ == "__main__":
     main()
