@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from webmd_scraper import WebmdSpider
 
 def scrape_mayo_clinic(query):
     url = f"https://www.mayoclinic.org/search/search-results?q={query}"
@@ -10,13 +13,15 @@ def scrape_mayo_clinic(query):
     # Process and extract relevant information from the webpage
     # Return the response to be shown to the user
 
+# Function to scrape WebMD using the Spider
 def scrape_webmd(query):
-    url = f"https://www.webmd.com/search/search_results/default.aspx?query={query}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-    
-    # Process and extract relevant information from the webpage
-    # Return the response to be shown to the user
+    # Create a CrawlerProcess and get the settings
+    process = CrawlerProcess(get_project_settings())
+
+    # Start the spider and pass the query as an argument
+    process.crawl(WebmdSpider, query=query)
+    process.start()
+
 
 def get_answer(query, sources):
     answers = []
