@@ -19,8 +19,13 @@ def fetch_mayo_clinic_information(query):
     return data
 
 def fetch_webmd_information(query):
-    params = {
-        'title': query
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        'question': query,
+        'target': 'web'
     }
 
     response = requests.get(WEBMD_API_ENDPOINT, headers=headers, json=data)
