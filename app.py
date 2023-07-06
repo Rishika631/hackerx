@@ -23,7 +23,7 @@ def fetch_webmd_information(query):
         'title': query
     }
 
-    response = requests.get(WEBMD_API_ENDPOINT, params=params)
+    response = requests.get(WEBMD_API_ENDPOINT, headers=headers, json=data)
     data = response.json()
     return data
 
