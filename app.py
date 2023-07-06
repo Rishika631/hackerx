@@ -28,7 +28,7 @@ def fetch_webmd_information(query):
         'target': 'web'
     }
 
-    response = requests.get(WEBMD_API_ENDPOINT, headers=headers, json=data)
+    response = requests.post(WEBMD_API_ENDPOINT, headers=headers, json=data)
     data = response.json()
     return data
 
