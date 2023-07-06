@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 
 MAYO_API_ENDPOINT = 'https://mcc.api.mayo.edu/semantic/v2/ask'
-WEBMD_API_ENDPOINT = 'https://symptoms.webmd.com/'
+WEBMD_API_ENDPOINT = 'https://www.webmd.com/'
 
 def fetch_mayo_clinic_information(query):
     headers = {
