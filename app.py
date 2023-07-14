@@ -45,32 +45,31 @@ def apply_frame(image, padding):
 
 # AI-powered Image Analysis and Tagging
 
-client=boto3.client('rekognition')
+client = boto3.client('rekognition')
 
 def image_caption_generator(image_path):
-    
-    # create a tmp folder in order to save the resized input image
+    # Create a tmp folder to save the resized input image
     if not os.path.exists('tmp'):
         os.makedirs('tmp')
-    
+
     # Open the original image
-    img = Image.open(image_path)  
+    img = Image.open(image_path)
 
     # Set the desired size for the resized image
-    new_size = (100, 100)  
+    new_size = (100, 100)
 
     # Resize the image
     resized_img = img.resize(new_size)
 
     # Save the resized image
-    resized_img.save('tmp/tmp.jpg') 
-    
-    with open('tmp.jpg', 'rb') as image:
+    resized_img.save('tmp/tmp.jpg')
+
+    with open('tmp/tmp.jpg', 'rb') as image:
         response = client.detect_labels(Image={'Bytes': image.read()})
-    
+
     image_labels = []
     for label in response['Labels']:
-        if label['Confidence']>70:
+        if label['Confidence'] > 70:
             image_labels.append(label['Name'].lower())
 
     # Generate a prompt by concatenating the image labels
@@ -78,18 +77,19 @@ def image_caption_generator(image_path):
 
     # Use the OpenAI API to generate image captions
     response = openai.Completion.create(
-      model='text-davinci-003',
-      prompt=prompt,
-      temperature=0.5,
-      max_tokens=50
+        model='text-davinci-003',  # Set the appropriate model name or ID
+        prompt=prompt,
+        temperature=0.5,
+        max_tokens=50
     )
 
     # Extract the generated image captions from the API response
     generated_captions = response['choices'][0]['text']
-    
-    output = 'Generated Image Captions:\n'+generated_captions
+
+    output = 'Generated Image Captions:\n' + generated_captions
 
     return output
+
 
 
 # Image Resize with AI Analysis
@@ -158,11 +158,24 @@ def main():
 
     elif function == "AI Analysis":
         # AI Analysis and Tagging
+        st.title("Image Caption Generator")
+
+    # Upload an image file
         uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
         if uploaded_image is not None:
-            image = Image.open(uploaded_image)
-            tags = analyze_image(image)
-            st.write("Tags:", tags)
+        # Save the uploaded image to a temporary file
+            with open("uploaded_image.jpg", "wb") as f:
+                f.write(uploaded_image.getbuffer())
+
+        # Display the uploaded image
+            st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
+
+        # Generate image captions
+            captions = image_caption_generator("uploaded_image.jpg")
+
+        # Display the generated captions
+            st.text_area("Generated Captions", value=captions, height=200)
 
     elif function == "Image Resize":
         # Image Resize with AI Analysis
