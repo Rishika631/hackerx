@@ -1,14 +1,14 @@
 import streamlit as st
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
-from io import BytesIO
-import requests
-import json
-import base64
+import os
 import boto3
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+import openai
 
-# Set your OpenAI API credentials
-API_KEY = "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"
+# Set your OpenAI API key
+openai.api_key = os.getenv('OpenAI')
+
+# Set up the AWS Rekognition client
+client = boto3.client('rekognition')
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -44,10 +44,25 @@ def apply_frame(image, padding):
     return framed_image
 
 # AI-powered Image Analysis and Tagging
+def analyze_image(image):
+    with open(image, 'rb') as img_file:
+        response = client.detect_labels(Image={'Bytes': img_file.read()})
 
-client = boto3.client('rekognition')
+    image_tags = []
+    for label in response['Labels']:
+        if label['Confidence'] > 70:
+            image_tags.append(label['Name'].lower())
 
-def image_caption_generator(image_path):
+    return image_tags
+
+# Image Resize with AI Analysis
+def resize_image_with_analysis(image, width, height):
+    resized_image = image.resize((width, height))
+    tags = analyze_image(resized_image)
+    return resized_image, tags
+
+# Function for image caption generation
+def generate_image_caption(image_path):
     # Create a tmp folder to save the resized input image
     if not os.path.exists('tmp'):
         os.makedirs('tmp')
@@ -77,7 +92,7 @@ def image_caption_generator(image_path):
 
     # Use the OpenAI API to generate image captions
     response = openai.Completion.create(
-        model='text-davinci-003',  # Set the appropriate model name or ID
+        model='text-davinci-003',
         prompt=prompt,
         temperature=0.5,
         max_tokens=50
@@ -89,15 +104,6 @@ def image_caption_generator(image_path):
     output = 'Generated Image Captions:\n' + generated_captions
 
     return output
-
-
-
-# Image Resize with AI Analysis
-def resize_image_with_analysis(image, width, height):
-    resized_image = image.resize((width, height))
-    tags = analyze_image(resized_image)
-    return resized_image, tags
-
 
 # Streamlit App
 def main():
@@ -160,21 +166,21 @@ def main():
         # AI Analysis and Tagging
         st.title("Image Caption Generator")
 
-    # Upload an image file
+        # Upload an image file
         uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
         if uploaded_image is not None:
-        # Save the uploaded image to a temporary file
+            # Save the uploaded image to a temporary file
             with open("uploaded_image.jpg", "wb") as f:
                 f.write(uploaded_image.getbuffer())
 
-        # Display the uploaded image
+            # Display the uploaded image
             st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
 
-        # Generate image captions
-            captions = image_caption_generator("uploaded_image.jpg")
+            # Generate image captions
+            captions = generate_image_caption("uploaded_image.jpg")
 
-        # Display the generated captions
+            # Display the generated captions
             st.text_area("Generated Captions", value=captions, height=200)
 
     elif function == "Image Resize":
@@ -188,5 +194,6 @@ def main():
             st.image(resized_image, use_column_width=True)
             st.write("Tags:", tags)
 
+# Run the app
 if __name__ == "__main__":
     main()
