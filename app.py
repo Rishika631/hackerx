@@ -10,19 +10,6 @@ import openai
 # Set your OpenAI API key
 openai.api_key = "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"
 
-# Download the CLIP model checkpoint
-model_url = "https://cdn.openai.com/clip/models/clip_vit_base_patch32_384.pt"
-model_path = "clip_vit_base_patch32_384.pt"
-
-if not os.path.exists(model_path):
-    response = requests.get(model_url)
-    with open(model_path, 'wb') as f:
-        f.write(response.content)
-
-# Load the CLIP model and processor
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model = CLIPModel.from_pretrained(model_path).to(device).eval()
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32").to(device)
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -57,34 +44,24 @@ def apply_frame(image, padding):
     framed_image = ImageOps.expand(image, border=padding, fill="white")
     return framed_image
 
-# Function for image caption generation
 def generate_image_caption(image_path):
-    # Open the original image
-    img = Image.open(image_path).convert("RGB")
+    API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
+    headers = {"Authorization": f"Bearer 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"}
 
-    # Preprocess the image
-    image = F.resize(img, (224, 224))
-    image = F.to_tensor(image).unsqueeze(0).to(device)
+    with open(image_path, "rb") as f:
+        files = {"file": f}
+        response = requests.post(API_URL, headers=headers, files=files)
 
-    # Generate a prompt using the image features
-    with torch.no_grad():
-        image_features = model.get_image_features(pixel_values=image, return_tensors="pt")
-        image_prompt = processor.build_inputs_with_special_tokens(image_features.input_ids)
-
-    # Use the OpenAI API to generate image captions
-    response = openai.Completion.create(
-        model='text-davinci-003',
-        prompt=image_prompt,
-        temperature=0.5,
-        max_tokens=50
-    )
-
-    # Extract the generated image captions from the API response
-    generated_captions = response['choices'][0]['text']
-
-    output = 'Generated Image Captions:\n' + generated_captions
+    if response.status_code == 200:
+        result = response.json()
+        generated_captions = result["predictions"]
+        output = "Generated Image Captions:\n" + "\n".join(generated_captions)
+    else:
+        output = "Error generating captions. Please try again."
 
     return output
+
+
 
 # Streamlit App
 def main():
