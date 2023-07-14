@@ -83,8 +83,49 @@ def main():
         if uploaded_image is not None:
             image = Image.open(uploaded_image)
 
-            # Crop, Transform, Focal Point, Brightness, Overlay, Frames
-            # ...
+            # Crop
+            st.subheader("Crop")
+            left = st.slider("Left", 0, image.width, 0)
+            top = st.slider("Top", 0, image.height, 0)
+            right = st.slider("Right", 0, image.width, image.width)
+            bottom = st.slider("Bottom", 0, image.height, image.height)
+            cropped_image = crop_image(image, left, top, right, bottom)
+            st.image(cropped_image, use_column_width=True)
+
+            # Transform
+            st.subheader("Transform")
+            angle = st.slider("Angle", -180, 180, 0)
+            scale = st.slider("Scale", 0.1, 5.0, 1.0)
+            transformed_image = transform_image(image, angle, scale)
+            st.image(transformed_image, use_column_width=True)
+
+            # Focal Point
+            st.subheader("Focal Point")
+            x = st.slider("X", 0, image.width, int(image.width / 2))
+            y = st.slider("Y", 0, image.height, int(image.height / 2))
+            size = st.slider("Size", 10, 200, 50)
+            focal_point_image = apply_focal_point(image, x, y, size)
+            st.image(focal_point_image, use_column_width=True)
+
+            # Effects (Brightness)
+            st.subheader("Effects (Brightness)")
+            factor = st.slider("Factor", 0.1, 2.0, 1.0)
+            brightness_image = apply_brightness(image, factor)
+            st.image(brightness_image, use_column_width=True)
+
+            # Overlay
+            st.subheader("Overlay")
+            overlay_image = st.file_uploader("Upload an overlay image", type=["png"])
+            if overlay_image is not None:
+                overlay = Image.open(overlay_image)
+                overlayed_image = apply_overlay(image, overlay)
+                st.image(overlayed_image, use_column_width=True)
+
+            # Frames
+            st.subheader("Frames")
+            padding = st.slider("Padding", 0, 50, 10)
+            framed_image = apply_frame(image, padding)
+            st.image(framed_image, use_column_width=True)
 
     elif function == "AI Analysis":
         # AI Analysis and Tagging
