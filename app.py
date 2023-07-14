@@ -4,6 +4,7 @@ from torchvision.transforms import functional as F
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
 import requests
+import openai
 
 # Set your OpenAI API key
 openai.api_key = "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"
