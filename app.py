@@ -3,14 +3,28 @@ import torch
 from torchvision.transforms import functional as F
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
-import openai
+import requests
 
 # Set your OpenAI API key
-openai.api_key = "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"
+openai.api_key = os.getenv('OpenAI')
+
+# Download the CLIP model checkpoint
+model_url = "https://cdn.openai.com/clip/models/clip-vit-base-patch32.pt"
+model_path = "clip-vit-base-patch32.pt"
+
+if not os.path.exists(model_path):
+    response = requests.get(model_url)
+    with open(model_path, 'wb') as f:
+        f.write(response.content)
 
 # Load the CLIP model
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model, preprocess = torch.hub.load("openai/clip-vit-base-patch32", "clip", device=device)
+model = torch.jit.load(model_path).to(device).eval()
+preprocess = torch.nn.Sequential(
+    F.resize((224, 224)),
+    F.to_tensor(),
+    F.normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+)
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
