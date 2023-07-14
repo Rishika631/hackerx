@@ -15,8 +15,9 @@ def main():
     if function == "Image Transformation":
         # Image Transformation
         uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-        if uploaded_image is not None:
-            transformed_image = perform_image_transformation(uploaded_image)
+        overlay_image = st.file_uploader("Upload overlay image", type=["jpg", "jpeg", "png"])
+        if uploaded_image is not None and overlay_image is not None:
+            transformed_image = perform_image_transformation(uploaded_image, overlay_image)
             st.image(transformed_image, use_column_width=True)
 
     elif function == "AI Analysis":
@@ -36,31 +37,21 @@ def main():
             st.image(optimized_image, use_column_width=True)
 
 # Image Transformation
-def perform_image_transformation(uploaded_image):
+def perform_image_transformation(uploaded_image, overlay_image):
     # Open the uploaded image using Pillow
     image = Image.open(uploaded_image)
 
-    # Crop the image
-    cropped_image = image.crop((100, 100, 300, 300))
+    # Add your image transformation logic here
+    # This is a placeholder code that returns the uploaded image as is
+    transformed_image = image
 
-    # Transform the image
-    transformed_image = cropped_image.rotate(45)
-
-    # Apply a focal point effect
-    blurred_image = transformed_image.filter(ImageFilter.GaussianBlur(radius=10))
-
-    # Apply brightness effect
-    enhancer = ImageEnhance.Brightness(blurred_image)
-    brightness_image = enhancer.enhance(1.5)
+    # Open the uploaded overlay image using Pillow
+    overlay = Image.open(overlay_image).convert("RGBA")
 
     # Apply overlay
-    overlay = Image.open("overlay.png").convert("RGBA")
-    overlayed_image = Image.alpha_composite(brightness_image.convert("RGBA"), overlay)
+    overlayed_image = Image.alpha_composite(transformed_image.convert("RGBA"), overlay)
 
-    # Apply frame (padding)
-    padded_image = ImageOps.expand(overlayed_image, border=20, fill="white")
-
-    return padded_image
+    return overlayed_image
 
 # AI Analysis and Tagging
 def perform_image_analysis(uploaded_image):
