@@ -3,6 +3,7 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 from io import BytesIO
 import requests
 import json
+import base64
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 # Set your OpenAI API credentials
@@ -57,7 +58,7 @@ def analyze_image(image):
         "n": 5,
         "stop": ["\n"],
         "inputs": {
-            "image": image,
+            "image": base64.b64encode(image).decode("utf-8"),
         },
     }
 
