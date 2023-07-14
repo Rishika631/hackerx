@@ -49,7 +49,8 @@ def analyze_image(image):
     }
     # Convert image to bytes
     image_bytes = BytesIO()
-    image.save(image_bytes, format="JPEG")
+    # Convert image to RGB mode before saving
+    image.convert("RGB").save(image_bytes, format="JPEG")
     image_bytes.seek(0)
 
     # Create multipart form data
@@ -63,6 +64,7 @@ def analyze_image(image):
     response = requests.post(endpoint, headers=headers, data=multipart_data)
     response.raise_for_status()
     return response.json()["output"]["tags"]
+
 
 
 # Image Resize with AI Analysis
