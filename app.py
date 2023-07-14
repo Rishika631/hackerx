@@ -6,7 +6,7 @@ import os
 import requests
 
 # Set your OpenAI API key
-openai.api_key = os.getenv('OpenAI')
+openai.api_key = "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"
 
 # Download the CLIP model checkpoint
 model_url = "https://cdn.openai.com/clip/models/clip-vit-base-patch32.pt"
