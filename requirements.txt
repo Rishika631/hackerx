@@ -3,4 +3,3 @@ Pillow
 streamlit
 requests_toolbelt
 openai
-base64
