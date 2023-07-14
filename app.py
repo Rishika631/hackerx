@@ -43,20 +43,34 @@ def apply_frame(image, padding):
 
 # AI-powered Image Analysis and Tagging
 def analyze_image(image):
+    endpoint = "https://api.openai.com/v1/vision/davinci/tags"
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "image/jpeg"
+        "Authorization": f"Bearer {API_KEY}"
     }
-    files = {"file": image}
-    response = requests.post("https://api.openai.com/v1/vision/davinci/tags", headers=headers, files=files)
+    # Convert image to bytes
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="JPEG")
+    image_bytes.seek(0)
+
+    # Create multipart form data
+    multipart_data = MultipartEncoder(
+        fields={
+            "file": ("image.jpg", image_bytes, "image/jpeg")
+        }
+    )
+    headers["Content-Type"] = multipart_data.content_type
+
+    response = requests.post(endpoint, headers=headers, data=multipart_data)
     response.raise_for_status()
     return response.json()["output"]["tags"]
+
 
 # Image Resize with AI Analysis
 def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
     tags = analyze_image(resized_image)
     return resized_image, tags
+
 
 # Streamlit App
 def main():
