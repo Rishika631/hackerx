@@ -144,7 +144,7 @@ def main():
         uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png'])
         
         if uploaded_file is not None:
-            abcd=Image.open(uploaded_image)
+            
             image_bytes = uploaded_file.read()
             output = query(image_bytes)
             # Display the generated captions
