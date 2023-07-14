@@ -3,4 +3,4 @@ Pillow
 streamlit
 requests_toolbelt
 openai
-boto3
+torch
