@@ -5,6 +5,7 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
 import requests
 from transformers import CLIPProcessor, CLIPModel
+import openai
 
 # Set your OpenAI API key
 openai.api_key = "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"
