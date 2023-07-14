@@ -4,28 +4,24 @@ from torchvision.transforms import functional as F
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
 import requests
-import openai
+from transformers import CLIPProcessor, CLIPModel
 
 # Set your OpenAI API key
 openai.api_key = "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"
 
 # Download the CLIP model checkpoint
-model_url = "https://cdn.openai.com/clip/models/clip-vit-base-patch32.pt"
-model_path = "clip-vit-base-patch32.pt"
+model_url = "https://cdn.openai.com/clip/models/clip_vit_base_patch32_384.pt"
+model_path = "clip_vit_base_patch32_384.pt"
 
 if not os.path.exists(model_path):
     response = requests.get(model_url)
     with open(model_path, 'wb') as f:
         f.write(response.content)
 
-# Load the CLIP model
+# Load the CLIP model and processor
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = torch.jit.load(model_path).to(device).eval()
-preprocess = torch.nn.Sequential(
-    F.resize((224, 224)),
-    F.to_tensor(),
-    F.normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-)
+model = CLIPModel.from_pretrained(model_path).to(device).eval()
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32").to(device)
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -65,16 +61,14 @@ def generate_image_caption(image_path):
     # Open the original image
     img = Image.open(image_path).convert("RGB")
 
-    # Preprocess the image for CLIP model
-    image = preprocess(img).unsqueeze(0).to(device)
+    # Preprocess the image
+    image = F.resize(img, (224, 224))
+    image = F.to_tensor(image).unsqueeze(0).to(device)
 
     # Generate a prompt using the image features
     with torch.no_grad():
-        image_features = model.encode_image(image)
-        image_features /= image_features.norm(dim=-1, keepdim=True)
-        image_prompt = "Image features:"
-        for feat in image_features[0]:
-            image_prompt += f"\n{feat:.3f}"
+        image_features = model.get_image_features(pixel_values=image, return_tensors="pt")
+        image_prompt = processor.build_inputs_with_special_tokens(image_features.input_ids)
 
     # Use the OpenAI API to generate image captions
     response = openai.Completion.create(
