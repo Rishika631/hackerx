@@ -108,7 +108,7 @@ def main():
             height = st.slider("Height", 100, 2000, 600, 100)
             resized_image = resize_image_with_analysis(image, width, height)
             st.image(resized_image, use_column_width=True)
-            image_bytes = uploaded_file.read()
+            image_bytes = uploaded_image.read()
             output = query(image_bytes)
             st.write("Tags:", output)
 
