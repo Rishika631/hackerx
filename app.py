@@ -43,17 +43,33 @@ def apply_frame(image, padding):
 
 # AI-powered Image Analysis and Tagging
 
-API_KEY = "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"
-
 def analyze_image(image):
+    endpoint = "https://api.openai.com/v1/engines/davinci-codex/completions"
     headers = {
         "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
     }
-    files = {"file": image}
+    data = {
+        "prompt": "Generate tags for the given image:",
+        "max_tokens": 20,
+        "temperature": 0.5,
+        "top_p": 1.0,
+        "n": 5,
+        "stop": ["\n"],
+        "inputs": {
+            "image": image,
+        },
+    }
 
-    response = requests.post("https://api-inference.huggingface.co/models/deepset/dieter-distilbert-tp-finetuned-ner", headers=headers, files=files)
-    response.raise_for_status()
-    return response.json()["predictions"]
+    response = requests.post(endpoint, headers=headers, json=data)
+    try:
+        response.raise_for_status()
+        tags = response.json()["choices"][0]["text"].strip().split(",")
+        return tags
+    except requests.exceptions.HTTPError as err:
+        print("HTTP Error:", err)
+        print("Response content:", response.content)
+        return []
 
 
 # Image Resize with AI Analysis
