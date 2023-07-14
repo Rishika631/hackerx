@@ -9,7 +9,8 @@ import openai
 
 # Set your OpenAI API key
 openai.api_key = "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"
-
+API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
+headers = {"Authorization": "Bearer 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"}
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -45,8 +46,6 @@ def apply_frame(image, padding):
     return framed_image
 
 def generate_image_caption(image_path):
-    API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
-    headers = {"Authorization": "Bearer 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"}
 
     with open(image_path, "rb") as f:
         files = {"file": f}
@@ -61,6 +60,9 @@ def generate_image_caption(image_path):
 
     return output
 
+def query(file):
+    response = requests.post(API_URL, headers=headers, data=file)
+    return response.text
 
 
 # Streamlit App
@@ -125,21 +127,13 @@ def main():
         st.title("Image Caption Generator")
 
         # Upload an image file
-        uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+        uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png'])
 
-        if uploaded_image is not None:
-            # Save the uploaded image to a temporary file
-            with open("uploaded_image.jpg", "wb") as f:
-                f.write(uploaded_image.getbuffer())
-
-            # Display the uploaded image
-            st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
-
-            # Generate image captions
-            captions = generate_image_caption("uploaded_image.jpg")
-
+        if uploaded_file is not None:
+            image_bytes = uploaded_file.read()
+            output = query(image_bytes)
             # Display the generated captions
-            st.text_area("Generated Captions", value=captions, height=200)
+            st.text_area("Generated Captions", value=output, height=200)
 
 # Run the app
 if __name__ == "__main__":
