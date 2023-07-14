@@ -42,6 +42,7 @@ def apply_frame(image, padding):
     return framed_image
 
 # AI-powered Image Analysis and Tagging
+# AI-powered Image Analysis and Tagging
 def analyze_image(image):
     endpoint = "https://api.openai.com/v1/vision/davinci/tags"
     headers = {
@@ -62,8 +63,14 @@ def analyze_image(image):
     headers["Content-Type"] = multipart_data.content_type
 
     response = requests.post(endpoint, headers=headers, data=multipart_data)
-    response.raise_for_status()
-    return response.json()["output"]["tags"]
+    try:
+        response.raise_for_status()
+        return response.json()["output"]["tags"]
+    except requests.exceptions.HTTPError as err:
+        print("HTTP Error:", err)
+        print("Response content:", response.content)
+        return []
+
 
 
 
