@@ -67,9 +67,7 @@ def query(file):
 # Image Resize with AI Analysis
 def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
-    image_bytes = image.read()
-    output = query(image_bytes)
-    return resized_image, output
+    return resized_image
 
 
 # Streamlit App
@@ -108,9 +106,11 @@ def main():
             image = Image.open(uploaded_image)
             width = st.slider("Width", 100, 2000, 800, 100)
             height = st.slider("Height", 100, 2000, 600, 100)
-            resized_image, tags = resize_image_with_analysis(image, width, height)
+            resized_image = resize_image_with_analysis(image, width, height)
             st.image(resized_image, use_column_width=True)
-            st.write("Tags:", tags)
+            image_bytes = uploaded_file.read()
+            output = query(image_bytes)
+            st.write("Tags:", output)
 
 # Run the app
 if __name__ == "__main__":
