@@ -5,10 +5,10 @@ import boto3
 import openai
 
 # Set your OpenAI API key
-openai.api_key = os.getenv('OpenAI')
+openai.api_key = "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"
 
 # Set up the AWS Rekognition client
-client = boto3.client('rekognition')
+
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
