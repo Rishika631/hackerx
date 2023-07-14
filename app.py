@@ -42,36 +42,18 @@ def apply_frame(image, padding):
     return framed_image
 
 # AI-powered Image Analysis and Tagging
-# AI-powered Image Analysis and Tagging
+
+API_KEY = "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"
+
 def analyze_image(image):
-    endpoint = "https://api.openai.com/v1/vision/davinci/tags"
     headers = {
-        "Authorization": f"Bearer {API_KEY}"
+        "Authorization": f"Bearer {API_KEY}",
     }
-    # Convert image to bytes
-    image_bytes = BytesIO()
-    # Convert image to RGB mode before saving
-    image.convert("RGB").save(image_bytes, format="JPEG")
-    image_bytes.seek(0)
+    files = {"file": image}
 
-    # Create multipart form data
-    multipart_data = MultipartEncoder(
-        fields={
-            "file": ("image.jpg", image_bytes, "image/jpeg")
-        }
-    )
-    headers["Content-Type"] = multipart_data.content_type
-
-    response = requests.post(endpoint, headers=headers, data=multipart_data)
-    try:
-        response.raise_for_status()
-        return response.json()["output"]["tags"]
-    except requests.exceptions.HTTPError as err:
-        print("HTTP Error:", err)
-        print("Response content:", response.content)
-        return []
-
-
+    response = requests.post("https://api-inference.huggingface.co/models/deepset/dieter-distilbert-tp-finetuned-ner", headers=headers, files=files)
+    response.raise_for_status()
+    return response.json()["predictions"]
 
 
 # Image Resize with AI Analysis
