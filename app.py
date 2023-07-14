@@ -1,6 +1,9 @@
 import streamlit as st
+from PIL import Image
+from io import BytesIO
+from requests_toolbelt import MultipartEncoder
 import requests
-from PIL import Image, ImageOps, ImageEnhance, ImageFilter
+import json
 
 # Set your OpenAI API credentials
 API_KEY = "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"
@@ -40,27 +43,22 @@ def apply_frame(image, padding):
 
 # AI-powered Image Analysis and Tagging
 def analyze_image(image):
+    endpoint = "https://api.openai.com/v1/vision/davinci/tags"
     headers = {
         "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "image/jpeg"
+        "Content-Type": "application/json"
     }
-    files = {"file": image}
-    response = requests.post("https://api.openai.com/v1/vision/davinci/tags", headers=headers, files=files)
+    payload = json.dumps({"images": [image]})
+    response = requests.post(endpoint, headers=headers, data=payload)
     response.raise_for_status()
-    return response.json()["output"]["tags"]
-
-# Image Resize with AI Analysis
-def resize_image_with_analysis(image, width, height):
-    resized_image = image.resize((width, height))
-    tags = analyze_image(resized_image)
-    return resized_image, tags
+    return response.json()["outputs"][0]["data"]["tags"]
 
 # Streamlit App
 def main():
     st.title("Digital Asset Management App")
 
     # Add a sidebar with function selection
-    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize"])
+    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis"])
 
     if function == "Image Transformation":
         # Image Transformation
@@ -118,17 +116,6 @@ def main():
         if uploaded_image is not None:
             image = Image.open(uploaded_image)
             tags = analyze_image(image)
-            st.write("Tags:", tags)
-
-    elif function == "Image Resize":
-        # Image Resize with AI Analysis
-        uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-        if uploaded_image is not None:
-            image = Image.open(uploaded_image)
-            width = st.slider("Width", 100, 2000, 800, 100)
-            height = st.slider("Height", 100, 2000, 600, 100)
-            resized_image, tags = resize_image_with_analysis(image, width, height)
-            st.image(resized_image, use_column_width=True)
             st.write("Tags:", tags)
 
 if __name__ == "__main__":
