@@ -46,7 +46,7 @@ def apply_frame(image, padding):
 
 def generate_image_caption(image_path):
     API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
-    headers = {"Authorization": f"Bearer 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"}
+    headers = {"Authorization": "Bearer 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"}
 
     with open(image_path, "rb") as f:
         files = {"file": f}
