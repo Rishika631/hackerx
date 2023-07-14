@@ -67,8 +67,8 @@ def query(file):
 # Image Resize with AI Analysis
 def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
-    resized_image_bytes = resized_image.tobytes()
-    output = query(resized_image_bytes)
+    resized_image_bytes = resized_image.read()
+    output = query(image)
     return resized_image, output
 
 
