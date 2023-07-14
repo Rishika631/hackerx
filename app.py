@@ -67,8 +67,10 @@ def query(file):
 # Image Resize with AI Analysis
 def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
-    output = query(resized_image)
+    resized_image_bytes = resized_image.tobytes()
+    output = query(resized_image_bytes)
     return resized_image, output
+
 
 # Streamlit App
 def main():
