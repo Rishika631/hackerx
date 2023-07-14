@@ -142,10 +142,9 @@ def main():
 
         # Upload an image file
         uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png'])
-        
+        image = Image.open(uploaded_file)
+        st.image(image, use_column_width=True)
         if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            st.image(image, use_column_width=True)
             
             image_bytes = uploaded_file.read()
             output = query(image_bytes)
