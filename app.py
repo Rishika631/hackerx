@@ -1,14 +1,16 @@
 import streamlit as st
+import torch
+from torchvision.transforms import functional as F
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
-import boto3
 import openai
 
 # Set your OpenAI API key
 openai.api_key = "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"
 
-# Set up the AWS Rekognition client
-
+# Load the CLIP model
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model, preprocess = torch.hub.load("openai/clip-vit-base-patch32", "clip", device=device)
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -43,57 +45,26 @@ def apply_frame(image, padding):
     framed_image = ImageOps.expand(image, border=padding, fill="white")
     return framed_image
 
-# AI-powered Image Analysis and Tagging
-def analyze_image(image):
-    with open(image, 'rb') as img_file:
-        response = client.detect_labels(Image={'Bytes': img_file.read()})
-
-    image_tags = []
-    for label in response['Labels']:
-        if label['Confidence'] > 70:
-            image_tags.append(label['Name'].lower())
-
-    return image_tags
-
-# Image Resize with AI Analysis
-def resize_image_with_analysis(image, width, height):
-    resized_image = image.resize((width, height))
-    tags = analyze_image(resized_image)
-    return resized_image, tags
-
 # Function for image caption generation
 def generate_image_caption(image_path):
-    # Create a tmp folder to save the resized input image
-    if not os.path.exists('tmp'):
-        os.makedirs('tmp')
-
     # Open the original image
-    img = Image.open(image_path)
+    img = Image.open(image_path).convert("RGB")
 
-    # Set the desired size for the resized image
-    new_size = (100, 100)
+    # Preprocess the image for CLIP model
+    image = preprocess(img).unsqueeze(0).to(device)
 
-    # Resize the image
-    resized_img = img.resize(new_size)
-
-    # Save the resized image
-    resized_img.save('tmp/tmp.jpg')
-
-    with open('tmp/tmp.jpg', 'rb') as image:
-        response = client.detect_labels(Image={'Bytes': image.read()})
-
-    image_labels = []
-    for label in response['Labels']:
-        if label['Confidence'] > 70:
-            image_labels.append(label['Name'].lower())
-
-    # Generate a prompt by concatenating the image labels
-    prompt = 'Generate an image caption for the following image labels: ' + ', '.join(image_labels)
+    # Generate a prompt using the image features
+    with torch.no_grad():
+        image_features = model.encode_image(image)
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        image_prompt = "Image features:"
+        for feat in image_features[0]:
+            image_prompt += f"\n{feat:.3f}"
 
     # Use the OpenAI API to generate image captions
     response = openai.Completion.create(
         model='text-davinci-003',
-        prompt=prompt,
+        prompt=image_prompt,
         temperature=0.5,
         max_tokens=50
     )
@@ -110,7 +81,7 @@ def main():
     st.title("Digital Asset Management App")
 
     # Add a sidebar with function selection
-    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize"])
+    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis"])
 
     if function == "Image Transformation":
         # Image Transformation
@@ -182,17 +153,6 @@ def main():
 
             # Display the generated captions
             st.text_area("Generated Captions", value=captions, height=200)
-
-    elif function == "Image Resize":
-        # Image Resize with AI Analysis
-        uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-        if uploaded_image is not None:
-            image = Image.open(uploaded_image)
-            width = st.slider("Width", 100, 2000, 800, 100)
-            height = st.slider("Height", 100, 2000, 600, 100)
-            resized_image, tags = resize_image_with_analysis(image, width, height)
-            st.image(resized_image, use_column_width=True)
-            st.write("Tags:", tags)
 
 # Run the app
 if __name__ == "__main__":
