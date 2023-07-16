@@ -69,6 +69,18 @@ def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
     return resized_image
 
+# Image Transformation: Format Conversion
+def convert_format(image, new_format):
+    buffered = io.BytesIO()
+    image.save(buffered, format=new_format)
+    return Image.open(buffered)
+
+
+# Image Transformation: Compression
+def compress_image(image, quality):
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG", quality=quality)
+    return Image.open(buffered)
 
 # Streamlit App
 def main():
@@ -159,6 +171,31 @@ def main():
             height = st.slider("Height", 100, 2000, 600, 100)
             resized_image = resize_image_with_analysis(image, width, height)
             st.image(resized_image, use_column_width=True)
+
+    elif function == "Image Optimization":
+    st.title("Image Optimization")
+
+    # Upload an image file
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
+    if uploaded_image is not None:
+        image = Image.open(uploaded_image)
+        st.image(image, caption="Original Image", use_column_width=True)
+
+        # Optimization Options
+        option = st.selectbox("Select Optimization Option", ["Format Conversion", "Compression"])
+
+        if option == "Format Conversion":
+            st.subheader("Format Conversion")
+            format_option = st.selectbox("Select Format", ["JPEG", "PNG"])
+            converted_image = convert_format(image, format_option)
+            st.image(converted_image, caption=f"Converted to {format_option}", use_column_width=True)
+
+        elif option == "Compression":
+            st.subheader("Compression")
+            quality = st.slider("Quality (0-100)", 0, 100, 75)
+            compressed_image = compress_image(image, quality)
+            st.image(compressed_image, caption=f"Compressed (Quality: {quality})", use_column_width=True)
         
 
 # Run the app
