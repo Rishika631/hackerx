@@ -205,7 +205,7 @@ def main():
                 # Provide the download link
                     st.download_button(
                         label="Click to download",
-                        data=optimized_image,
+                        data=compressed_image,
                         file_name="compressed_image.jpg",  # Change the file name and extension accordingly
                         mime="image/jpeg"
                     )
