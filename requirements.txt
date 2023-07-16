@@ -5,3 +5,4 @@ requests_toolbelt
 openai
 torch
 torchvision
+pymongo
