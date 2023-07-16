@@ -6,6 +6,7 @@ import os
 import requests
 from transformers import CLIPProcessor, CLIPModel
 import openai
+import io
 
 # Set your OpenAI API key
 openai.api_key = "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"
