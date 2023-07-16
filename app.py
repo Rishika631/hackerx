@@ -203,12 +203,12 @@ def main():
                 st.image(compressed_image, caption=f"Compressed (Quality: {quality})", use_column_width=True)
                 if st.button("Download Compressed Image"):
                 # Provide the download link
-                st.download_button(
-                    label="Click to download",
-                    data=optimized_image,
-                    file_name="compressed_image.jpg",  # Change the file name and extension accordingly
-                    mime="image/jpeg"
-                )
+                    st.download_button(
+                        label="Click to download",
+                        data=optimized_image,
+                        file_name="compressed_image.jpg",  # Change the file name and extension accordingly
+                        mime="image/jpeg"
+                    )
         
 
 # Run the app
