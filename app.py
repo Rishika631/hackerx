@@ -78,10 +78,14 @@ def convert_format(image, new_format):
 
 
 # Image Transformation: Compression
-def compress_image(image, compression_quality):
+def compress_image(image, quality):
     buffered = io.BytesIO()
-    image.save(buffered, format="JPEG", quality=compression_quality)
+    image.save(buffered, format="JPEG", quality=quality)
     return Image.open(buffered)
+    # Save the compressed image to disk
+    compressed_image.save("compressed_image.jpg", format="JPEG", quality=quality)
+    
+    return compressed_image
 
 # Streamlit App
 def main():
@@ -193,33 +197,18 @@ def main():
                 st.image(converted_image, caption=f"Converted to {format_option}", use_column_width=True)
 
             elif option == "Compression":
-        # Image Optimization
-                uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-                if uploaded_image is not None:
-                    image = Image.open(uploaded_image)
-
-            # Image Optimization Options
-                    compression_quality = st.slider("Compression Quality", 0, 100, 85)
-
-            # Optimize the image
-                    optimized_image = compress_image(image, compression_quality)
-
-            # Display the optimized image
-                    st.image(optimized_image, use_column_width=True)
-
-            # Download button for the compressed image
-                    if st.button("Download Compressed Image"):
-                # Save the compressed image to a temporary file
-                        temp_file = io.BytesIO()
-                        optimized_image.save(temp_file, format="JPEG", quality=compression_quality)
-
+                st.subheader("Compression")
+                quality = st.slider("Quality (0-100)", 0, 100, 75)
+                compressed_image = compress_image(image, quality)
+                st.image(compressed_image, caption=f"Compressed (Quality: {quality})", use_column_width=True)
+                if st.button("Download Compressed Image"):
                 # Provide the download link
-                        st.download_button(
-                            label="Click to download",
-                            data=temp_file.getvalue(),
-                            file_name="compressed_image.jpg",  # Change the file name and extension accordingly
-                            mime="image/jpeg"
-                        )
+                st.download_button(
+                    label="Click to download",
+                    data=optimized_image,
+                    file_name="compressed_image.jpg",  # Change the file name and extension accordingly
+                    mime="image/jpeg"
+                )
         
 
 # Run the app
