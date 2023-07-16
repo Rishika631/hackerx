@@ -87,7 +87,7 @@ def main():
     st.title("Digital Asset Management App")
 
     # Add a sidebar with function selection
-    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize"])
+    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize","Image Optimization"])
 
     if function == "Image Transformation":
         # Image Transformation
