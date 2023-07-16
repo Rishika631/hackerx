@@ -192,7 +192,7 @@ def main():
                 converted_image = convert_format(image, format_option)
                 st.image(converted_image, caption=f"Converted to {format_option}", use_column_width=True)
 
-            elif function == "Compression":
+            elif option == "Compression":
         # Image Optimization
                 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
                 if uploaded_image is not None:
