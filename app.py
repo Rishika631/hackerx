@@ -82,10 +82,6 @@ def compress_image(image, quality):
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG", quality=quality)
     return Image.open(buffered)
-    # Save the compressed image to disk
-    compressed_image.save("compressed_image.jpg", format="JPEG", quality=quality)
-    
-    return compressed_image
 
 # Streamlit App
 def main():
@@ -202,6 +198,10 @@ def main():
                 compressed_image = compress_image(image, quality)
                 st.image(compressed_image, caption=f"Compressed (Quality: {quality})", use_column_width=True)
                 if st.button("Download Compressed Image"):
+                    # Save the compressed image to a BytesIO object
+                    compressed_buffered = io.BytesIO()
+                    compressed_image.save(compressed_buffered, format="JPEG", quality=quality)
+                
                 # Provide the download link
                     st.download_button(
                         label="Click to download",
