@@ -7,11 +7,17 @@ import requests
 from transformers import CLIPProcessor, CLIPModel
 import openai
 import io
+import pymongo
 
 # Set your OpenAI API key
 openai.api_key = "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"
 API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
 headers = {"Authorization": "Bearer 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"}
+# Set up MongoDB connection
+client = pymongo.MongoClient("mongodb+srv://Rishika:taylorswift@cluster0.acug8d2.mongodb.net/?retryWrites=true&w=majority")
+db = client["image_tags_db"]
+collection = db["image_tags"]
+
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
@@ -47,7 +53,6 @@ def apply_frame(image, padding):
     return framed_image
 
 def generate_image_caption(image_path):
-
     with open(image_path, "rb") as f:
         files = {"file": f}
         response = requests.post(API_URL, headers=headers, files=files)
@@ -55,6 +60,9 @@ def generate_image_caption(image_path):
     if response.status_code == 200:
         result = response.json()
         generated_captions = result["predictions"]
+        # Store the generated captions in the MongoDB database
+        db_entry = {"image_path": image_path, "captions": generated_captions}
+        collection.insert_one(db_entry)
         output = "Generated Image Captions:\n" + "\n".join(generated_captions)
     else:
         output = "Error generating captions. Please try again."
@@ -150,18 +158,20 @@ def main():
                 st.image(framed_image, use_column_width=True)
 
     elif function == "AI Analysis":
-        # AI Analysis and Tagging
+    # AI Analysis and Tagging
         st.title("Image Caption Generator")
 
-        # Upload an image file
+    # Upload an image file
         uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'jpeg', 'png'])
-        
+
         if uploaded_file is not None:
-            
             image_bytes = uploaded_file.read()
             output = query(image_bytes)
-            # Display the generated captions
             st.text_area("Generated Captions:", value=output, height=200)
+
+        # Store the generated captions in the MongoDB database
+            db_entry = {"image_path": uploaded_file.name, "captions": output.split("\n")}
+            collection.insert_one(db_entry)
 
     elif function == "Image Resize":
         # Image Resize with AI Analysis
