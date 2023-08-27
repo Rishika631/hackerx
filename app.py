@@ -4,29 +4,57 @@ from torchvision.transforms import functional as F
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import os
 import requests
-from transformers import CLIPProcessor, CLIPModel
+from datetime import datetime
 import openai
 import io
 import pymongo
+import base64
 
 # Set your OpenAI API key
-openai.api_key = "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"
+# openai.api_key = <APIKEY>
 API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
 headers = {"Authorization": "Bearer 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"}
 # Set up MongoDB connection
 client = pymongo.MongoClient("mongodb+srv://Rishika:taylorswift@cluster0.acug8d2.mongodb.net/?retryWrites=true&w=majority")
 db = client["image_tags_db"]
-collection = db["image_tags"]
+collection1 = db["image_tags"]
+collection = db["transformation_logs"]
 
+# Initialize a list to store transformation logs
+transformation_logs = []
+
+# Function to log transformation details
+def log_transformation_details(transformation_type, details):
+    log_entry = {
+        "type": transformation_type,
+        "details": details,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    collection.insert_one(log_entry)
+    # transformation_logs.append(log_entry)
 
 # Image Transformation: Crop
 def crop_image(image, left, top, right, bottom):
-    return image.crop((left, top, right, bottom))
+    cropped_image = image.crop((left, top, right, bottom))
+    log_transformation_details("Crop", {
+                    "left": left,
+                    "top": top,
+                    "right": right,
+                    "bottom": bottom,
+                })
+    return cropped_image
 
 # Image Transformation: Transform
 def transform_image(image, angle, scale):
     transformed_image = image.rotate(angle)
     transformed_image = transformed_image.resize((int(image.width * scale), int(image.height * scale)))
+    
+    # Log transformation details
+    log_transformation_details("Transform", {
+        "angle": angle,
+        "scale": scale,
+    })
+    
     return transformed_image
 
 # Image Transformation: Focal Point
@@ -73,6 +101,12 @@ def query(file):
     response = requests.post(API_URL, headers=headers, data=file)
     return response.text
 
+def encode_html_as_base64(html_filename):
+    with open(html_filename, "rb") as html_file:
+        html_content = html_file.read()
+    encoded_html = base64.b64encode(html_content).decode("utf-8")
+    return encoded_html
+
 # Image Resize with AI Analysis
 def resize_image_with_analysis(image, width, height):
     resized_image = image.resize((width, height))
@@ -96,7 +130,7 @@ def main():
     st.title("Digital Asset Management App")
 
     # Add a sidebar with function selection
-    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize","Image Optimization"])
+    function = st.sidebar.selectbox("Select Function", ["Image Transformation", "AI Analysis", "Image Resize","Image Optimization","Drawing Canvas"])
 
     if function == "Image Transformation":
         # Image Transformation
@@ -115,7 +149,20 @@ def main():
                 right = st.slider("Right", 0, image.width, image.width)
                 bottom = st.slider("Bottom", 0, image.height, image.height)
                 cropped_image = crop_image(image, left, top, right, bottom)
+                
                 st.image(cropped_image, use_column_width=True)
+
+                
+                # log_entry = {
+                #     "type": "Crop",
+                #     "details": {
+                #      "left": left,
+                #      "top": top,
+                #      "right": right,
+                #      "bottom": bottom,
+                #  },
+                # }
+                # collection1.insert_one(log_entry)
 
             elif transformation_option == "Transform":
                 # Transform
@@ -124,6 +171,9 @@ def main():
                 scale = st.slider("Scale", 0.1, 5.0, 1.0)
                 transformed_image = transform_image(image, angle, scale)
                 st.image(transformed_image, use_column_width=True)
+
+            
+        
 
             elif transformation_option == "Focal Point":
                 # Focal Point
@@ -156,6 +206,7 @@ def main():
                 padding = st.slider("Padding", 0, 50, 10)
                 framed_image = apply_frame(image, padding)
                 st.image(framed_image, use_column_width=True)
+            
 
     elif function == "AI Analysis":
     # AI Analysis and Tagging
@@ -171,7 +222,7 @@ def main():
 
         # Store the generated captions in the MongoDB database
             db_entry = {"image_path": uploaded_file.name, "captions": output.split("\n")}
-            collection.insert_one(db_entry)
+            collection1.insert_one(db_entry)
 
     elif function == "Image Resize":
         # Image Resize with AI Analysis
@@ -182,6 +233,14 @@ def main():
             height = st.slider("Height", 100, 2000, 600, 100)
             resized_image = resize_image_with_analysis(image, width, height)
             st.image(resized_image, use_column_width=True)
+
+    elif function == "Drawing Canvas":
+        st.title("Drawing Canvas")
+
+        st.markdown(
+            '<a href="https://rishika631.github.io/techsurf/" target="_blank" rel="noopener noreferrer">Open Drawing Canvas in New Tab</a>',
+            unsafe_allow_html=True
+        )
 
     elif function == "Image Optimization":
         st.title("Image Optimization")
